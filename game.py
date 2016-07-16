@@ -16,6 +16,8 @@ PHASE = [
 
 CATEGORY = [
     'OTRO',
+    'SENIOR',
+    'PRO',
     'SUPERLIGA',
     'SUPERLIGA2',
     'PRIMERA',
