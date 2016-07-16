@@ -24,7 +24,7 @@ CATEGORY = [
     'CADETE',
     'INFANTIL',
     'ALEVIN',
-    'AFICIONADO'
+    'AFICIONADOS'
 ]
 
 DIVISION = [
