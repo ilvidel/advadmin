@@ -24,7 +24,7 @@ def upload_game(game):
     """
     Upload one game to the database in the cloud
     """
-    log.warning("Subiendo partido...")
+    log.warn("Subiendo partido...")
     log.warn(game)
 
     if not FORCE_YES:

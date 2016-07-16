@@ -127,4 +127,3 @@ if __name__ == "__main__":
     query = compose_query()
     result = run_query(query)
     show_result(result)
-    log.fatal("uda")

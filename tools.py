@@ -1,23 +1,10 @@
-import colorlog
 import subprocess as sp
+
+import logger
 
 
 def get_logger(name):
-    handler = colorlog.StreamHandler()
-    fmt = colorlog.ColoredFormatter(
-        "%(log_color)s%(levelname)s:: %(message)s",
-        log_colors={
-            'DEBUG': 'cyan',
-            'INFO': 'white',
-            'WARNING': 'yellow',
-            'ERROR': 'red',
-            'CRITICAL': 'red,bg_white',
-        }
-    )
-    handler.setFormatter(fmt)
-    logger = colorlog.getLogger(name)
-    logger.addHandler(handler)
-    return logger
+    return logger.Logger()
 
 
 def execute(command):
