@@ -2,16 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import colorlog
 import datetime
 import sys
 import subprocess as sp
 
 import config
-from category import Category
-from division import Division
-from game import Game, GameParser
-from phase import Phase
+import game
+import tools
+
 
 FORCE_YES = False
 NOT_REALLY = False
@@ -19,21 +17,7 @@ DB_NAME = config.get_dbname()
 SERVER_URL = config.get_server()
 CLOUDANT_CREDS = config.get_creds()
 options = None
-
-handler = colorlog.StreamHandler()
-fmt = colorlog.ColoredFormatter(
-    "%(log_color)s%(levelname)s:: %(message)s",
-    log_colors={
-        'DEBUG': 'cyan',
-        'INFO': 'white',
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'red,bg_white',
-    }
-)
-handler.setFormatter(fmt)
-log = colorlog.getLogger('addgame')
-log.addHandler(handler)
+log = tools.get_logger('ADD')
 
 
 def upload_game(game):
@@ -80,12 +64,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('local', help='Nombre del equipo local (entre comillas)')
     parser.add_argument('visitante', help='Nombre del equipo visitante (entre comillas)')
-    parser.add_argument('categoria', choices=Category.__members__.keys())
-    parser.add_argument('division', choices=Division.__members__.keys())
+    parser.add_argument('categoria', choices=game.CATEGORY)
+    parser.add_argument('division', choices=game.DIVISION)
     parser.add_argument('hora', help='Hora de comienzo del encuentro, en formato 24h (ej: 17:30')
     parser.add_argument('--fecha', help='Fecha del encuentro (se toma la actual por defecto. Formato: 27-3-16')
     parser.add_argument('-g', '--grupo', help='Grupo de competición (una letra)', default='-')
-    parser.add_argument('--fase', help='Fase de la competición (por defecto, LIGA)', choices=Phase.__members__.keys(), default='LIGA')
+    parser.add_argument('--fase', help='Fase de la competición (por defecto, LIGA)', choices=game.PHASE, default='LIGA')
     parser.add_argument('--puntos-local', help='Puntos del equipo local, separados por comas (--puntos-local 25,19,25,25)', default=[])
     parser.add_argument('--puntos-visit', help='Puntos del equipo visitante, separados por comas (--puntos-local 23,25,20,21)', default=[])
     parser.add_argument('--notif', action='store_true', help='Enviar una notificación a los usuarios de la app', default=False)
@@ -111,7 +95,7 @@ if __name__ == '__main__':
         log.level = 10
 
     # TODO: PARSE OPTIONS, CREATE GAME OBJECT AND UPLOAD
-    game = Game()
+    game = game.Game()
     game.local = options.local
     game.visit = options.visitante
     game.category = options.categoria
@@ -126,7 +110,7 @@ if __name__ == '__main__':
         today = datetime.datetime.today()
         game.date = "{:02}-{:02}-{:04}".format(today.day, today.month, today.year)
     else:
-        date = GameParser.checkDate(options.fecha)
+        date = game.GameParser.checkDate(options.fecha)
         if date is None:
             sys.exit()
         game.set_date = date
