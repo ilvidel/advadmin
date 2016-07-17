@@ -25,7 +25,7 @@ def delete(gameid):
     )
 
     if not FORCE_YES:
-        log.warn("Borrando partido " + json.dumps(game, indent=2))
+        log.warn("Borrando partido " + json.dumps(game, indent=2, sort_keys=True))
         check = raw_input('¿Seguro que quieres borrar el partido? (s/[n]): ')
         if not (check in ['s', 'S', 'y', 'Y']):
             log.info("Abortando...")
