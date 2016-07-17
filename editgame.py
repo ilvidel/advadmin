@@ -3,53 +3,24 @@
 
 import argparse
 import json
-import os
-import subprocess
 
 import config
 import tools
 from logger import Logger
-
 
 DB_NAME = config.get_dbname()
 SERVER_URL = config.get_server()
 CLOUDANT_CREDS = config.get_creds()
 log = tools.get_logger()
 options = None
-TEMP_FILE = os.path.join('/tmp', 'game.json')
 
 
 def get_game(gameid):
     game = tools.get_game(gameid)
-    log.debug(json.dumps(game, indent=2))
-    f = open(TEMP_FILE, 'w+')
-    f.write(json.dumps(game, indent=2))
+    log.debug(json.dumps(game, indent=2, sort_keys=True))
+    f = open(tools.TEMP_FILE, 'w+')
+    f.write(json.dumps(game, indent=2, sort_keys=True))
     f.close()
-
-
-def edit_game():
-    cmd = os.environ.get('EDITOR') + " " + TEMP_FILE
-    log.debug(cmd)
-    subprocess.call(cmd.split())
-
-
-def upload_game():
-    f = open(TEMP_FILE, 'r')
-    game = json.loads(''.join(f.readlines()))
-    f.close()
-
-    cmd = (
-        "curl -s --user {0} {1}/{2} -X POST "
-        "-H 'Content-Type: application/json' -d '{3}'"
-        .format(CLOUDANT_CREDS, SERVER_URL, DB_NAME, json.dumps(game))
-    )
-
-    out = tools.execute(cmd)
-    if out is None:
-        log.error("No se pudo actualizar el partido")
-        return
-    log.debug(out)
-    log.info("Subida correcta")
 
 
 if __name__ == "__main__":
@@ -57,10 +28,29 @@ if __name__ == "__main__":
     parser.add_argument('partido', help='Identificador del partido a editar. Usa findgame.py para averiguarlo')
     parser.add_argument('-v', '--verbose', action='store_true', help='Mostrar más información', default=False)
 
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-n', '--not-really', help='No hacer nada, solo indicarlo (para pruebas)', action='store_true')
+    group.add_argument('-y', '--force-yes', help='Saltarse las preguntas de confirmación', action='store_true')
+
     options = parser.parse_args()
     if options.verbose:
         log.level = Logger.Level.DEBUG
 
     get_game(options.partido)
-    edit_game()
-    upload_game()
+
+    # open the editor
+    tools.edit_game()
+
+    if options.not_really:
+        log.debug("No se hace nada por usar el flag -n")
+        exit()
+
+    if not options.force_yes:
+        log.warn('')
+        check = raw_input("¿Seguro que quieres subir el partido? (s/[n]): ")
+        if not (check in ['s', 'S', 'y', 'Y']):
+            log.info("Abortando...")
+            exit(1)
+
+    # actually upload the game
+    tools.upload_game()

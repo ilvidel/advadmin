@@ -36,146 +36,33 @@ DIVISION = [
 ]
 
 
-class Game:
-
-    def __init__(self):
-        self.__date = '01-01-1970'
-        self.__time = '0:00'
-        self.__competition = ''
-        self.__category = 'SEGUNDA'
-        self.__division = 'MASCULINA'
-        self.__phase = 'LIGA'
-        self.__pool = '-'
-        self.__local = ''
-        self.__local_points = []
-        self.__visit_points = []
-        self.__visit = ''
-        self.__hall = ''
-        self.__city = ''
-
-    @property
-    def date(self):
-        return self.__date
-
-    @property
-    def time(self):
-        return self.__time
-
-    @property
-    def competition(self):
-        return self.__competition
-
-    @property
-    def category(self):
-        return self.__category
-
-    @property
-    def division(self):
-        return self.__division
-
-    @property
-    def phase(self):
-        return self.__phase
-
-    @property
-    def pool(self):
-        return self.__pool
-
-    @property
-    def local(self):
-        return self.__local
-
-    @property
-    def visit(self):
-        return self.__visit
-
-    @property
-    def hall(self):
-        return self.__hall
-
-    @property
-    def city(self):
-        return self.__city
-
-    @property
-    def local_points(self):
-        return self.__local_points
-
-    @property
-    def visit_points(self):
-        return self.__visit_points
-
-    def toJson(self):
-        dic = {}
-        dic['date'] = self.date
-        dic['time'] = self.time
-        dic['competition'] = self.competition
-        dic['category'] = self.category
-        dic['division'] = self.division
-        dic['phase'] = self.phase
-        dic['pool'] = self.pool
-        dic['local'] = self.local
-        dic['local_points'] = self.local_points
-        dic['visit'] = self.visit
-        dic['visit_points'] = self.visit_points
-        dic['hall'] = self.hall
-        dic['city'] = self.city
-        return dic
-
-    def __str__(self):
-        return json.dumps(self.toJson(), indent=3)
-
-    @date.setter
-    def date(self, d):
-        self.__date = d
-
-    @time.setter
-    def time(self, time):
-        self.__time = GameParser.checkTime(time)
-
-    @competition.setter
-    def competition(self, comp):
-        self.__competition = comp.toupper()
-
-    @category.setter
-    def category(self, cat):
-        self.__category = GameParser.checkCategory(cat)
-
-    @division.setter
-    def division(self, div):
-        self.__division = GameParser.checkDivision(div)
-
-    @phase.setter
-    def phase(self, phase):
-        self.__phase = GameParser.checkPhase(phase)
-
-    @pool.setter
-    def pool(self, pool):
-        self.__pool = GameParser.checkPool(pool)
-
-    @local.setter
-    def local(self, local):
-        self.__local = local.upper()
-
-    @visit.setter
-    def visit(self, visit):
-        self.__visit = visit.upper()
-
-    @local_points.setter
-    def local_points(self, points):
-        self.__local_points = points
-
-    @visit_points.setter
-    def visit_points(self, points):
-        self.__visit_points = points
-
-    @hall.setter
-    def hall(self, hall):
-        self.__hall = hall
-
-    @city.setter
-    def city(self, city):
-        self.__city = city
+game = {
+    'date': '01-01-1970',
+    'time': '0:00',
+    'competition': '',
+    'category': 'SEGUNDA',
+    'division': 'MASCULINA',
+    'phase': 'LIGA',
+    'pool': '-',
+    'team1': {
+        "name": "",
+        "set1": "",
+        "set2": "",
+        "set3": "",
+        "set4": "",
+        "set5": ""
+    },
+    'team2': {
+        "name": "",
+        "set1": "",
+        "set2": "",
+        "set3": "",
+        "set4": "",
+        "set5": ""
+    },
+    'hall': '',
+    'city': ''
+}
 
 
 class GameParser:
