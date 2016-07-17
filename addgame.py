@@ -1,15 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 import argparse
 import datetime
 import sys
-import subprocess as sp
 
 import config
 import game
 import tools
-
+from logger import Logger
 
 FORCE_YES = False
 NOT_REALLY = False
@@ -17,7 +16,7 @@ DB_NAME = config.get_dbname()
 SERVER_URL = config.get_server()
 CLOUDANT_CREDS = config.get_creds()
 options = None
-log = tools.get_logger('ADD')
+log = tools.get_logger()
 
 
 def upload_game(game):
@@ -25,39 +24,28 @@ def upload_game(game):
     Upload one game to the database in the cloud
     """
     log.warn("Subiendo partido...")
-    log.warn(game)
+    log.warn(str(game))
 
     if not FORCE_YES:
-        check = input("¿Es correcto? (s/[n]): ")
+        check = raw_input("¿Es correcto? (s/[n]): ")
         if not (check in ['s', 'S', 'y', 'Y']):
             log.info("Abortando...")
             sys.exit(1)
 
     cmd = (
-        "curl --user {0} {1}/{2} -X POST "
+        "curl -s --user {0} {1}/{2} -X POST "
         "-H 'Content-Type: application/json' -d '{3}'"
         .format(CLOUDANT_CREDS, SERVER_URL, DB_NAME, str(game))
-    )
-
-    # can't just print cmd because it would reveal the credentials
-    log.debug(
-        "curl {0}/{1} -X POST -H 'Content-Type: application/json' -d '{2}'"
-        .format(SERVER_URL, DB_NAME, str(game))
     )
 
     if NOT_REALLY:
         log.debug("Abortando subida por el uso del flag -n")
         return
-
-    child = sp.Popen(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    out, err = child.communicate()
-
-    if child.returncode == 0:
-        log.info("[ OK ] Subida correcta")
-        log.info(out)
-    else:
-        log.info(out)
-        log.critical(err)
+    print("Before exec")
+    out = tools.execute(cmd)
+    print("After exec")
+    log.debug(out)
+    log.info("Subida correcta")
 
 
 if __name__ == '__main__':
@@ -91,8 +79,10 @@ if __name__ == '__main__':
     if options.not_really:
         NOT_REALLY = True
 
+    print(log.level)
     if options.verbose:
-        log.level = 10
+        log.level = Logger.Level.DEBUG
+    print(log.level)
 
     # TODO: PARSE OPTIONS, CREATE GAME OBJECT AND UPLOAD
     game = game.Game()

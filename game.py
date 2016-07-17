@@ -195,7 +195,7 @@ class GameParser:
             raise ValueError('La fecha introducida (%s) no es correcta' % date)
 
         if mydate < datetime.date.today():
-            check = input('La fecha %s está en el pasado. '
+            check = raw_input('La fecha %s está en el pasado. '
                           '¿Continuar de todos modos? (s/[n]): ' % date)
             if check not in ['s', 'y', 'S', 'Y']:
                 print("Abortando...")
