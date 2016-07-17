@@ -41,9 +41,7 @@ def upload_game(game):
     if NOT_REALLY:
         log.debug("Abortando subida por el uso del flag -n")
         return
-    print("Before exec")
     out = tools.execute(cmd)
-    print("After exec")
     log.debug(out)
     log.info("Subida correcta")
 

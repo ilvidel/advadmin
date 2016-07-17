@@ -1,5 +1,7 @@
 import subprocess as sp
 
+import config
+import json
 import logger
 
 
@@ -18,7 +20,8 @@ def execute(command):
 
     out, err = child.communicate()
     if child.returncode != 0:
-        log.fatal(err)
+        log.fatal(err or out)
+        return None
 
     if "error" in out:
         log.error(out)
@@ -26,3 +29,19 @@ def execute(command):
 
     log.debug(out)
     return out
+
+
+def get_game(gameid):
+    cmd = 'curl -s --user {} {}/{}/{}'.format(
+        config.get_creds(),
+        config.get_server(),
+        config.get_dbname(),
+        gameid
+    )
+    out = execute(cmd)
+    if out is None:
+        get_logger().error("No se encuentra el partido " + gameid)
+        return None
+
+    game = json.loads(out)
+    return game

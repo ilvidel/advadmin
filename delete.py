@@ -15,19 +15,8 @@ FORCE_YES = False
 log = tools.get_logger()
 
 
-def __get_game(gameid):
-    cmd = 'curl -s --user {} {}/{}/{}'.format(CREDS, SERVER, DBNAME, gameid)
-    out = tools.execute(cmd)
-    if out is None:
-        log.error("No se encuentra el partido " + gameid)
-        return None
-
-    game = json.loads(out)
-    return game
-
-
 def delete(gameid):
-    game = __get_game(gameid)
+    game = tools.get_game(gameid)
     if game is None:
         return
 
