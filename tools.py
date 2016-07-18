@@ -90,13 +90,38 @@ def get_next_id(competition):
     return count + 1
 
 
+def remove_special_chars(text):
+    if text is None:
+        return ""
+
+    replacements = {
+        'á': 'a',
+        'é': 'e',
+        'í': 'i',
+        'ó': 'o',
+        'ú': 'u',
+        'ñ': 'n',
+        'ü': 'u',
+        'Á': 'A',
+        'É': 'E',
+        'Í': 'I',
+        'Ó': 'O',
+        'Ú': 'U',
+        'Ñ': 'N',
+        'Ü': 'U',
+        }
+    regex = re.compile("(%s)" % "|".join(map(re.escape, replacements.keys())))
+    return regex.sub(lambda x: str(replacements[x.string[x.start():x.end()]]), text)
+
+
 def upload_game():
     """
     Upload the game stored in the temp file
     """
-    f = open(TEMP_FILE, 'r')
-    game = json.loads(''.join(f.readlines()))
-    f.close()
+    text = None
+    with open(TEMP_FILE, 'r') as f:
+        text = ''.join(f.readlines())
+    game = json.loads(remove_special_chars(text))
 
     log.info("Subiendo partido...")
 
