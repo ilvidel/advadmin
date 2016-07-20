@@ -1,18 +1,25 @@
 # -*- encoding: utf-8 -*-
+import configparser
 import os
 import re
 import subprocess as sp
 import urllib
 
-import config
 import json
 import logger
 
-DB_NAME = config.get_dbname()
-SERVER_URL = config.get_server()
-CLOUDANT_CREDS = config.get_creds()
+
 TEMP_FILE = os.path.join('/tmp', 'game.json')
 log = logger.Logger()
+cfg = configparser.ConfigParser()
+cfg.read('config.ini')
+
+CMD_TEMPLATE = 'curl -s --user {}:{} http://{}.cloudant.com/{}/'.format(
+    cfg.get('adv', 'user'),
+    cfg.get('adv', 'passwd'),
+    cfg.get('adv', 'server'),
+    cfg.get('adv', 'dbname')
+)
 
 
 def get_logger():
@@ -44,12 +51,8 @@ def get_game(gameid):
     """
     Retrieve a game from the database
     """
-    cmd = 'curl -s --user {} {}/{}/{}'.format(
-        config.get_creds(),
-        config.get_server(),
-        config.get_dbname(),
-        gameid
-    )
+    cmd = CMD_TEMPLATE + gameid
+    log.debug(cmd)
     out = execute(cmd)
     if out is None:
         get_logger().error("No se encuentra el partido " + gameid)
@@ -77,8 +80,8 @@ def edit_game():
 
 def get_next_id(competition):
     cmd = (
-        'curl -s -u {} {}/{}/_design/gamesearch/_search/searchAll?q=competition:{}'
-        .format(CLOUDANT_CREDS, SERVER_URL, DB_NAME, urllib.quote_plus(competition))
+        CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q=competition:{}'
+        .format(urllib.quote_plus(competition))
     )
     response = execute(cmd)
     if response is None or 'total_rows' not in response:
@@ -109,7 +112,7 @@ def remove_special_chars(text):
         'Ú': 'U',
         'Ñ': 'N',
         'Ü': 'U',
-        }
+    }
     regex = re.compile("(%s)" % "|".join(map(re.escape, replacements.keys())))
     return regex.sub(lambda x: str(replacements[x.string[x.start():x.end()]]), text)
 
@@ -133,9 +136,8 @@ def upload_game():
         game['_id'] = "{}_{}".format(competition, gid)
 
     cmd = (
-        "curl -s --user {0} {1}/{2} -X POST "
-        "-H 'Content-Type: application/json' -d '{3}'"
-        .format(CLOUDANT_CREDS, SERVER_URL, DB_NAME, json.dumps(game, sort_keys=True))
+        CMD_TEMPLATE + " -X POST -H 'Content-Type: application/json' -d '{}'"
+        .format(json.dumps(game, sort_keys=True))
     )
 
     out = execute(cmd)

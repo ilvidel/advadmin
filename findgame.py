@@ -5,14 +5,12 @@ import argparse
 import json
 import urllib
 
-import config
 import game
 import tools
 from logger import Logger
+from tools import CMD_TEMPLATE
 
-DB_NAME = config.get_dbname()
-SERVER_URL = config.get_server()
-CLOUDANT_CREDS = config.get_creds()
+
 log = tools.get_logger()
 options = None
 
@@ -54,15 +52,16 @@ def compose_query():
         criteria.append('team1:{0} OR team2:{0}'.format(options.equipo))
 
     query = ' AND '.join(criteria)
+    log.debug("search query: " + query)
     return urllib.quote_plus(query)
 
 
 def run_query(query):
-    cmd = 'curl -s --user {0} "{1}/{2}/_design/gamesearch/_search/searchAll?q={3}&limit=200{4}"'
 
-    log.debug(cmd.format("", SERVER_URL, DB_NAME, query, ''))
+    cmd = CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q={}&limit=200{}'
+    log.debug(cmd.format(query, ''))
 
-    out = tools.execute(cmd.format(CLOUDANT_CREDS, SERVER_URL, DB_NAME, query, ''))
+    out = tools.execute(cmd.format(query, ''))
     if out is None:
         return None
 
@@ -75,10 +74,7 @@ def run_query(query):
         return None
 
     while len(game_list) < total:
-        out = tools.execute(cmd.format(
-            CLOUDANT_CREDS, SERVER_URL, DB_NAME, query,
-            '&bookmark=' + bookmark
-        ))
+        out = tools.execute(cmd.format(query, '&bookmark=' + bookmark))
         response = json.loads(out)
         game_list += response['rows']
         bookmark = response['bookmark']
@@ -107,16 +103,22 @@ def show_result(game_list):
     log.info("Se han encontrado {} partidos".format(len(game_list)))
 
 
+def show_game(gameid):
+    game = tools.get_game(gameid)
+    print(json.dumps(game, indent=4, sort_keys=True))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--competicion', help='En qué competición buscar')
-    parser.add_argument('--fecha', help='Fecha del encuentro. Pueden utilizarse comodines, por ejemplo: *-08-2016 para encontrar los partidos jugados en Agosto de 2016')
-    parser.add_argument('--hora', help='Hora del encuentro')
-    parser.add_argument('--equipo', help='Buscar un equipo')
-    parser.add_argument('--categoria', help='Buscar partidos de esta categoría')
-    parser.add_argument('--division', help='Buscar partidos de esta división')
-    parser.add_argument('--fase', help='Fase de la competición (por defecto, LIGA)')
-    parser.add_argument('--grupo', help='Buscar partidos de un grupo específico')
+    parser.add_argument('-i', '--id', help='Mostrar el partido con este identificador')
+    parser.add_argument('-c', '--competicion', help='En qué competición buscar')
+    parser.add_argument('-d', '--fecha', help='Fecha del encuentro. Pueden utilizarse comodines, por ejemplo: *-08-2016 para encontrar los partidos jugados en Agosto de 2016')
+    parser.add_argument('-H', '--hora', help='Hora del encuentro')
+    parser.add_argument('-e', '--equipo', help='Buscar un equipo')
+    parser.add_argument('-C', '--categoria', help='Buscar partidos de esta categoría')
+    parser.add_argument('-D', '--division', help='Buscar partidos de esta división')
+    parser.add_argument('-f', '--fase', help='Fase de la competición (por defecto, LIGA)')
+    parser.add_argument('-g', '--grupo', help='Buscar partidos de un grupo específico')
     parser.add_argument('-v', '--verbose', action='store_true', help='Mostrar más información', default=False)
 
     options = parser.parse_args()
@@ -127,6 +129,10 @@ if __name__ == "__main__":
         print(parser.print_help())
         log.error('Especifica al menos un criterio de búsqueda')
         exit(1)
+
+    if options.id:
+        show_game(options.id)
+        exit(0)
 
     query = compose_query()
     result = run_query(query)
