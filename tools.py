@@ -62,6 +62,39 @@ def get_game(gameid):
     return game
 
 
+def check_game():
+    with open(TEMP_FILE, 'r') as f:
+        game = json.loads(f.read())
+
+    keys = ['competition', 'date', 'time', 'phase', 'category', 'division',
+            'team1', 'team2', 'city', 'hall', 'pool']
+
+    for k in ['_id', '_rev']:   # we don't nee to compare these
+        if k in game.keys():
+            game.pop(k)
+
+    try:
+        assert sorted(game.keys()) == sorted(keys)
+    except AssertionError:
+        log.error("Falta algún campo en el documento")
+        exit(1)
+
+    healthy = True
+    for i in keys[:8]:
+        if game[i] == '':
+            log.error("Debes especificar un valor para el campo '{}'".format(i))
+            healthy = False
+    if game['team1']['name'] == '':
+        log.error("Debes especificar un nombre para el equipo 1")
+        healthy = False
+    if game['team2']['name'] == '':
+        log.error("Debes especificar un nombre para el equipo 2")
+        healthy = False
+
+    if not healthy:
+        exit(1)
+
+
 def edit_game():
     """
     Edit a game using the default editor.
@@ -76,6 +109,7 @@ def edit_game():
 
     get_logger().debug(cmd)
     sp.call(cmd.split())
+    check_game()
 
 
 def get_next_id(competition):
@@ -144,5 +178,5 @@ def upload_game():
     if out is None:
         log.error("No se pudo actualizar el partido")
         return
-    log.debug(out)
+    log.info(out)
     log.info("Subida correcta")
