@@ -46,19 +46,19 @@ game = {
     'pool': '-',
     'team1': {
         "name": "",
-        "set1": "",
-        "set2": "",
-        "set3": "",
-        "set4": "",
-        "set5": ""
+        "set1": 0,
+        "set2": 0,
+        "set3": 0,
+        "set4": 0,
+        "set5": 0
     },
     'team2': {
         "name": "",
-        "set1": "",
-        "set2": "",
-        "set3": "",
-        "set4": "",
-        "set5": ""
+        "set1": 0,
+        "set2": 0,
+        "set3": 0,
+        "set4": 0,
+        "set5": 0
     },
     'hall': '',
     'city': ''
