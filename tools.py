@@ -114,9 +114,10 @@ def edit_game():
 
 def get_next_id(competition):
     cmd = (
-        CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q=competition:{}'
-        .format(urllib.quote_plus(competition))
+        CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q=competition:\\"{}\\"'
+        .format(urllib.quote(competition))
     )
+    log.debug(cmd)
     response = execute(cmd)
     if response is None or 'total_rows' not in response:
         get_logger().fatal("Se ha producido un error:")
