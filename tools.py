@@ -14,7 +14,7 @@ log = logger.Logger()
 cfg = configparser.ConfigParser()
 cfg.read('config.ini')
 
-CMD_TEMPLATE = 'curl -s --user {}:{} http://{}.cloudant.com/{}/'.format(
+CMD_TEMPLATE = 'curl -s --user {}:{} "http://{}.cloudant.com/{}/'.format(
     cfg.get('adv', 'user'),
     cfg.get('adv', 'passwd'),
     cfg.get('adv', 'server'),
@@ -27,7 +27,7 @@ def get_logger():
 
 
 def execute(command):
-    log = get_logger()
+    log.debug("[ EXECUTE ] " + command)
     child = sp.Popen(
         command,
         shell=True,
@@ -43,15 +43,41 @@ def execute(command):
         log.error(out)
         return None
 
-    log.debug(out)
+    #log.debug(out)
     return out
+
+
+def run_query(query):
+    """
+    Run a query on the database
+    """
+    cmd = CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q={}&limit=200{}"'
+    out = execute(cmd.format(query, ''))
+    if out is None:
+        return None
+
+    response = json.loads(out)
+    total = response['total_rows']
+    bookmark = response['bookmark']
+    game_list = response['rows']
+
+    if total == 0:
+        return None
+
+    while len(game_list) < total:
+        out = execute(cmd.format(query, '&bookmark=' + bookmark))
+        response = json.loads(out)
+        game_list += response['rows']
+        log.debug("found " + str(len(game_list)) + " games")
+        bookmark = response['bookmark']
+    return game_list
 
 
 def get_game(gameid):
     """
     Retrieve a game from the database
     """
-    cmd = CMD_TEMPLATE + gameid
+    cmd = CMD_TEMPLATE + gameid + '"'
     log.debug(cmd)
     out = execute(cmd)
     if out is None:
@@ -67,7 +93,7 @@ def check_game():
         game = json.loads(f.read())
 
     keys = ['competition', 'date', 'time', 'phase', 'category', 'division',
-            'team1', 'team2', 'city', 'hall', 'pool']
+            'team1', 'team2', 'pool']
 
     for k in ['_id', '_rev']:   # we don't nee to compare these
         if k in game.keys():
@@ -80,7 +106,7 @@ def check_game():
         exit(1)
 
     healthy = True
-    for i in keys[:8]:
+    for i in keys:
         if game[i] == '':
             log.error("Debes especificar un valor para el campo '{}'".format(i))
             healthy = False
@@ -107,25 +133,27 @@ def edit_game():
 
     cmd = editor + " " + TEMP_FILE
 
-    get_logger().debug(cmd)
+    log.debug(cmd)
     sp.call(cmd.split())
-    check_game()
+    # check_game()
 
 
 def get_next_id(competition):
-    cmd = (
-        CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q=competition:\\"{}\\"'
-        .format(urllib.quote(competition))
-    )
-    log.debug(cmd)
-    response = execute(cmd)
-    if response is None or 'total_rows' not in response:
+    query = 'competition:\\"{}\\"'.format(urllib.quote(competition))
+
+    all_games = run_query(query)
+    if all_games is None:
         get_logger().fatal("Se ha producido un error:")
-        get_logger().info(response)
         exit(1)
 
-    count = json.loads(response).get('total_rows', 0)
-    return count + 1
+    all_ids = [x['id'] for x in all_games]
+    log.debug("len(all_ids): " + str(len(all_ids)))
+    comp = competition.upper().replace(" ", "") + "_"
+    i = 1
+    while (comp + str(i) in all_ids):
+        i += 1
+    log.info("ID del partido: " + comp + str(i))
+    return comp + str(i)
 
 
 def remove_special_chars(text):
@@ -165,13 +193,14 @@ def upload_game():
 
     if '_id' not in game:
         # need to create an ID
+        log.debug("generando ID para el partido")
         competition = game['competition']
         gid = get_next_id(competition)
         competition = re.sub(" ", "", competition.upper())
-        game['_id'] = "{}_{}".format(competition, gid)
+        game['_id'] = gid
 
     cmd = (
-        CMD_TEMPLATE + " -X POST -H 'Content-Type: application/json' -d '{}'"
+        CMD_TEMPLATE + '"' + " -X POST -H 'Content-Type: application/json' -d '{}'"
         .format(json.dumps(game, sort_keys=True))
     )
 

@@ -8,7 +8,6 @@ import urllib
 import game
 import tools
 from logger import Logger
-from tools import CMD_TEMPLATE
 
 
 log = tools.get_logger()
@@ -56,31 +55,6 @@ def compose_query():
     return urllib.quote_plus(query)
 
 
-def run_query(query):
-
-    cmd = CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q={}&limit=200{}'
-    log.debug(cmd.format(query, ''))
-
-    out = tools.execute(cmd.format(query, ''))
-    if out is None:
-        return None
-
-    response = json.loads(out)
-    total = response['total_rows']
-    bookmark = response['bookmark']
-    game_list = response['rows']
-
-    if total == 0:
-        return None
-
-    while len(game_list) < total:
-        out = tools.execute(cmd.format(query, '&bookmark=' + bookmark))
-        response = json.loads(out)
-        game_list += response['rows']
-        bookmark = response['bookmark']
-    return game_list
-
-
 def show_result(game_list):
     if game_list is None:
         log.info("No se han encontrado partidos con esos criterios")
@@ -91,7 +65,7 @@ def show_result(game_list):
 
     for g in game_list:
         fields = g['fields']
-        print('ID: {0}\n{1}   {2}   {3} {4}   {5} vs {6}\n\n'.format(
+        print('ID: {0}  {1}   {2}   {3} {4}   {5} vs {6}'.format(
             g['id'],
             fields.get('competition', ''),
             fields.get('date', ''),
@@ -112,7 +86,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--id', help='Mostrar el partido con este identificador')
     parser.add_argument('-c', '--competicion', help='En qué competición buscar')
-    parser.add_argument('-d', '--fecha', help='Fecha del encuentro. Pueden utilizarse comodines, por ejemplo: *-08-2016 para encontrar los partidos jugados en Agosto de 2016')
+    parser.add_argument('-d', '--fecha', help='Fecha del encuentro.')
     parser.add_argument('-H', '--hora', help='Hora del encuentro')
     parser.add_argument('-e', '--equipo', help='Buscar un equipo')
     parser.add_argument('-C', '--categoria', help='Buscar partidos de esta categoría')
@@ -135,5 +109,5 @@ if __name__ == "__main__":
         exit(0)
 
     query = compose_query()
-    result = run_query(query)
+    result = tools.run_query(query)
     show_result(result)
