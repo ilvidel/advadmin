@@ -18,10 +18,10 @@ def single_upload(game, not_really=False, force_yes=False):
     """
     Upload a single game to the database
     """
-    # write the game to a temprary file
-    f = open(tools.TEMP_FILE, 'w+')
-    f.write(json.dumps(game, indent=2, sort_keys=True))
-    f.close()
+    if not os.path.exists(tools.TEMP_FILE):
+        # create the empty game, if it doesn't exist
+        with open(tools.TEMP_FILE, 'w+') as f:
+            f.write(json.dumps(game, indent=2, sort_keys=True))
 
     # open the editor
     tools.edit_game()
