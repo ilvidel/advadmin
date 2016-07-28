@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-import json
 import re
 
 PHASE = [
@@ -67,7 +66,7 @@ game = {
 
 class GameParser:
 
-    def checkDate(date):
+    def checkDate(self, date):
         valid = re.compile(r"^[0-9]{2}[/-][0-9]{2}[/-][0-9]{4}$")
         if valid.match(date) is None:
             raise ValueError(date + ' no es un formato de fecha correcto (DD-MM-AAAA)')
@@ -83,14 +82,14 @@ class GameParser:
 
         if mydate < datetime.date.today():
             check = raw_input('La fecha %s está en el pasado. '
-                          '¿Continuar de todos modos? (s/[n]): ' % date)
+                              '¿Continuar de todos modos? (s/[n]): ' % date)
             if check not in ['s', 'y', 'S', 'Y']:
                 print("Abortando...")
                 return
 
         return "%02d-%02d-%04d" % (day, month, year)
 
-    def checkTime(time):
+    def checkTime(self, time):
         valid = re.compile(r"^[012]?[0-9]:[0-5][0-9]$")
         if valid.match(time) is None:
             raise ValueError(time + ' no se reconoce como una hora correcta (hh:mm)')
@@ -101,19 +100,19 @@ class GameParser:
 
         return time
 
-    def checkCategory(category):
+    def checkCategory(self, category):
         category = category.upper()
         if category not in CATEGORY:
             raise ValueError("Categoría no válida: '%s'" % category)
         return category
 
-    def checkDivision(division):
+    def checkDivision(self, division):
         division = division.upper()
         if division not in DIVISION:
             raise ValueError("División no válida: '%s'" % division)
         return division
 
-    def checkPool(pool):
+    def checkPool(self, pool):
         if len(pool) > 1:
             raise ValueError("Grupo no válido: '%s'" % pool)
 
@@ -122,31 +121,32 @@ class GameParser:
         else:
             raise ValueError("Grupo no válido '%s'" % pool)
 
-    def checkPhase(phase):
+    def checkPhase(self, phase):
         phase = phase.upper()
         if phase not in PHASE:
             raise ValueError("Fase no válida: '%s'" % phase)
         return phase
 
-    def parseGame(line):
+    def parseGame(self, line):
         """
-        date time competition category division phase pool local visitor hall city
+        date time competition category division phase pool local visitor (hall city)
         """
-        data = line.split(",")
+        fields = line.split(",")
 
-        if len(data) < 11:
-            raise ValueError("Faltan datos para el partido: " + line)
+        if len(fields) < 9:
+            raise ValueError("Falta algún campo en la línea")
 
-        date = GameParser.checkDate(data[0].strip())
-        time = GameParser.checkTime(data[1].strip())
-        comp = data[2].strip()
-        cat = GameParser.checkCategory(data[3].strip())
-        div = GameParser.checkDivision(data[4].strip())
-        phase = GameParser.checkPhase(data[5].strip())
-        pool = GameParser.checkPool(data[6].strip())
-        local = data[7].strip()
-        visit = data[8].strip()
-        hall = data[9].strip()
-        city = data[10].strip()
+        game = {}
+        game['date'] = self.checkDate(fields[0].strip())
+        game['time'] = self.checkTime(fields[1].strip())
+        game['comp'] = fields[2].strip()
+        game['cat'] = self.checkCategory(fields[3].strip())
+        game['div'] = self.checkDivision(fields[4].strip())
+        game['phase'] = self.checkPhase(fields[5].strip())
+        game['pool'] = self.checkPool(fields[6].strip())
+        game['local'] = fields[7].strip()
+        game['visit'] = fields[8].strip()
+        # game['hall'] = fields[9].strip()
+        # game['city'] = fields[10].strip()
 
-        return Game(date, time, comp, cat, div, phase, pool, local, visit, hall, city)
+        return game

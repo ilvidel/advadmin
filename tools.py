@@ -7,9 +7,10 @@ import urllib
 
 import json
 import logger
-
+from game import GameParser
 
 TEMP_FILE = os.path.join('/tmp', 'game.json')
+TEMP_BULK_FILE = os.path.join('/tmp', 'bulk.csv')
 log = logger.Logger()
 cfg = configparser.ConfigParser()
 cfg.read('config.ini')
@@ -121,7 +122,7 @@ def check_game():
         exit(1)
 
 
-def edit_game():
+def edit_game(filename=None):
     """
     Edit a game using the default editor.
     """
@@ -131,7 +132,7 @@ def edit_game():
         get_logger().info("Por favor, define uno en la variable de entorno EDITOR")
         exit(1)
 
-    cmd = editor + " " + TEMP_FILE
+    cmd = editor + " " + filename or TEMP_FILE
 
     log.debug(cmd)
     sp.call(cmd.split())
@@ -180,14 +181,15 @@ def remove_special_chars(text):
     return regex.sub(lambda x: str(replacements[x.string[x.start():x.end()]]), text)
 
 
-def upload_game():
+def upload_game(game=None):
     """
     Upload the game stored in the temp file
     """
-    text = None
-    with open(TEMP_FILE, 'r') as f:
-        text = ''.join(f.readlines())
-    game = json.loads(remove_special_chars(text))
+    if game is None:
+        text = None
+        with open(TEMP_FILE, 'r') as f:
+            text = ''.join(f.readlines())
+        game = json.loads(remove_special_chars(text))
 
     log.info("Subiendo partido...")
 
@@ -210,3 +212,26 @@ def upload_game():
         return
     log.info(out)
     log.info("Subida correcta")
+
+
+def bulk_upload():
+    with open(TEMP_BULK_FILE, "r") as f:
+        lines = filter(lambda l: not l.startswith('#') and len(l) > 1, f.readlines())
+
+    games = []
+    healthy = True
+    parser = GameParser()
+    for l in lines:
+        try:
+            g = parser.parseGame(l)
+            games.append(g)
+        except ValueError as e:
+            log.error(e.message)
+            log.info(l)
+            healthy = False
+
+    if not healthy:
+        exit(1)
+
+    for g in games:
+        upload_game(g)
