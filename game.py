@@ -139,13 +139,28 @@ class GameParser:
         game = {}
         game['date'] = self.checkDate(fields[0].strip())
         game['time'] = self.checkTime(fields[1].strip())
-        game['comp'] = fields[2].strip()
-        game['cat'] = self.checkCategory(fields[3].strip())
-        game['div'] = self.checkDivision(fields[4].strip())
+        game['competition'] = fields[2].strip()
+        game['category'] = self.checkCategory(fields[3].strip())
+        game['division'] = self.checkDivision(fields[4].strip())
         game['phase'] = self.checkPhase(fields[5].strip())
         game['pool'] = self.checkPool(fields[6].strip())
-        game['local'] = fields[7].strip()
-        game['visit'] = fields[8].strip()
+
+        game['team1'] = {}
+        game['team1']['name'] = fields[7].strip()
+        game['team1']['set1'] = 0
+        game['team1']['set2'] = 0
+        game['team1']['set3'] = 0
+        game['team1']['set4'] = 0
+        game['team1']['set5'] = 0
+
+        game['team2'] = {}
+        game['team2']['name'] = fields[8].strip()
+        game['team2']['set1'] = 0
+        game['team2']['set2'] = 0
+        game['team2']['set3'] = 0
+        game['team2']['set4'] = 0
+        game['team2']['set5'] = 0
+
         # game['hall'] = fields[9].strip()
         # game['city'] = fields[10].strip()
 
