@@ -132,7 +132,7 @@ def edit_game(filename=None):
         get_logger().info("Por favor, define uno en la variable de entorno EDITOR")
         exit(1)
 
-    cmd = editor + " " + filename or TEMP_FILE
+    cmd = editor + " " + (filename or TEMP_FILE)
 
     log.debug(cmd)
     sp.call(cmd.split())
