@@ -46,9 +46,9 @@ def compose_query():
         criteria.append('phase:' + fase)
 
     if options.grupo:
-        criteria.append('group:' + options.grupo)
+        criteria.append('pool:' + options.grupo)
     if options.equipo:
-        criteria.append('team1:{0} OR team2:{0}'.format(options.equipo))
+        criteria.append('(team1:{0} OR team2:{0})'.format(options.equipo))
 
     query = ' AND '.join(criteria)
     log.debug("search query: " + query)
@@ -64,15 +64,16 @@ def show_result(game_list):
     print('\n')
 
     for g in game_list:
-        fields = g['fields']
-        print('ID: {0}  {1}   {2}   {3} {4}   {5} vs {6}'.format(
-            g['id'],
-            fields.get('competition', ''),
-            fields.get('date', ''),
-            fields.get('category', ''),
-            fields.get('division', ''),
-            fields.get('team1', ''),
-            fields.get('team2', '')
+        print('ID: {gid:20}  {comp:12}   {date} {time}   {cat:>11} {div:11}[{pool}]   {loc:>20} vs {vis:20}'.format(
+            gid=g['_id'],
+            comp=g['competition'],
+            date=g['date'],
+            time=g['time'],
+            cat=g['category'],
+            div=g['division'],
+            pool=g['pool'],
+            loc=g['team1']['name'],
+            vis=g['team2']['name']
         ))
     log.info("Se han encontrado {} partidos".format(len(game_list)))
 
