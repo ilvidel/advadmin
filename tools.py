@@ -27,6 +27,10 @@ def get_logger():
     return log
 
 
+def get_notification_key():
+    return cfg.get('adv', 'notif_key')
+
+
 def execute(command):
     log.debug("[ EXECUTE ] " + command)
     child = sp.Popen(
@@ -44,7 +48,7 @@ def execute(command):
         log.error(out)
         return None
 
-    #log.debug(out)
+    # log.debug(out)
     return out
 
 
@@ -52,7 +56,7 @@ def run_query(query):
     """
     Run a query on the database
     """
-    cmd = CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q={}&limit=200{}"'
+    cmd = CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q={}&include_docs=true&limit=200{}"'
     out = execute(cmd.format(query, ''))
     if out is None:
         return None
@@ -60,7 +64,7 @@ def run_query(query):
     response = json.loads(out)
     total = response['total_rows']
     bookmark = response['bookmark']
-    game_list = response['rows']
+    game_list = [x['doc'] for x in response['rows']]
 
     if total == 0:
         return None
@@ -68,7 +72,7 @@ def run_query(query):
     while len(game_list) < total:
         out = execute(cmd.format(query, '&bookmark=' + bookmark))
         response = json.loads(out)
-        game_list += response['rows']
+        game_list += [x['doc'] for x in response['rows']]
         log.debug("found " + str(len(game_list)) + " games")
         bookmark = response['bookmark']
     return game_list
@@ -147,7 +151,7 @@ def get_next_id(competition):
         get_logger().fatal("Se ha producido un error:")
         exit(1)
 
-    all_ids = [x['id'] for x in all_games]
+    all_ids = [x['_id'] for x in all_games]
     log.debug("len(all_ids): " + str(len(all_ids)))
     comp = competition.upper().replace(" ", "") + "_"
     i = 1
