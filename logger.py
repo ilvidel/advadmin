@@ -48,6 +48,4 @@ class Logger:
         self.__print("[0;35m", "DEBUG:: " + message)
 
     def __print(self, color, message):
-        print(self.TEMPLATE.format(
-            chr(27), color, re.sub(config.get_creds(), "", message)
-        ))
+        print(self.TEMPLATE.format(chr(27), color, message))
