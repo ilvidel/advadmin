@@ -33,13 +33,9 @@ def get_notification_key():
 
 def execute(command):
     log.debug("[ EXECUTE ] " + command)
-    child = sp.Popen(
-        command,
-        shell=True,
-        stdout=sp.PIPE, stderr=sp.PIPE
-    )
-
+    child = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     out, err = child.communicate()
+
     if child.returncode != 0:
         log.fatal(err or out)
         return None
@@ -67,7 +63,7 @@ def run_query(query):
     game_list = [x['doc'] for x in response['rows']]
 
     if total == 0:
-        return None
+        return game_list
 
     while len(game_list) < total:
         out = execute(cmd.format(query, '&bookmark=' + bookmark))
