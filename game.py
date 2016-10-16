@@ -5,7 +5,7 @@ import re
 
 PHASE = [
     'LIGA',
-    'PLAY-OFF',
+    'ELIMINATORIA',
     'OCTAVOS',
     'CUARTOS',
     'BRONCE',
