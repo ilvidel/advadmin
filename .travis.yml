@@ -8,3 +8,7 @@ python:
 
 # run tests
 script: make test
+
+# notifications config
+notifications:
+  email: false
