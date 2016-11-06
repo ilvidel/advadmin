@@ -28,14 +28,14 @@ def compose_query():
         cat = options.categoria
         if cat.upper() not in game.CATEGORY:
             cat = options.categoria + '*'
-            log.warn('Categoria "{}" desconocida, usando comodines: {}'.format(options.categoria, cat))
+            log.warn('Categoría "{}" desconocida, usando comodines: {}'.format(options.categoria, cat))
         criteria.append('category:' + cat)
 
     if options.division:
         div = options.division
         if div.upper() not in game.DIVISION:
             div = options.division + '*'
-            log.warn('Division "{}" desconocida, usando comodines: {}'.format(options.division, div))
+            log.warn('División "{}" desconocida, usando comodines: {}'.format(options.division, div))
         criteria.append('division:' + div)
 
     if options.fase:
@@ -55,6 +55,22 @@ def compose_query():
     return urllib.quote_plus(query)
 
 
+def get_score(teamA, teamB):
+    a = 0
+    b = 0
+
+    for s in ['set1', 'set2', 'set3', 'set4', 'set5']:
+        if teamA[s] == teamB[s]:
+            continue
+
+        if teamA[s] > teamB[s]:
+            a += 1
+        else:
+            b += 1
+
+    return a, b
+
+
 def show_result(game_list):
     if game_list is None:
         log.info("No se han encontrado partidos con esos criterios")
@@ -63,18 +79,25 @@ def show_result(game_list):
     log.info("Se han encontrado {} partidos".format(len(game_list)))
     print('\n')
 
-    for g in game_list:
-        print('ID: {gid:20}  {comp:12}   {date} {time}   {cat:>11} {div:11}[{pool}]   {loc:>20} vs {vis:20}'.format(
-            gid=g['_id'],
-            comp=g['competition'],
-            date=g['date'],
-            time=g['time'],
-            cat=g['category'],
-            div=g['division'],
-            pool=g['pool'],
-            loc=g['team1']['name'],
-            vis=g['team2']['name']
-        ))
+    for g in sorted(game_list):
+        log.debug("ID: " + g['_id'])
+        won_a, won_b = get_score(g['team1'], g['team2'])
+        print(
+            u'{date} {time} {cat:3.3} {div:3.3} [{pool}] {phase:5.5} {loc:>30.30}  {wonA}-{wonB}  {vis:30.30} | {gid}'
+            .format(
+                gid=g['_id'],
+                date=g['date'],
+                time=g['time'],
+                cat=g['category'],
+                div=g['division'],
+                pool=g['pool'],
+                loc=g['team1']['name'],
+                vis=g['team2']['name'],
+                wonA=won_a,
+                wonB=won_b,
+                phase=g['phase']
+            )
+        )
     log.info("Se han encontrado {} partidos".format(len(game_list)))
 
 
