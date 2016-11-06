@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
+
 from enum import IntEnum
-import re
-import config
 
 
 class Logger:
