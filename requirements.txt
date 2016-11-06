@@ -1,0 +1,4 @@
+configparser
+coverage
+mock
+nose
