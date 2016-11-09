@@ -15,13 +15,23 @@ TEMP_BULK_FILE = os.path.join('/tmp', 'bulk.csv')
 log = logger.Logger()
 cfg = configparser.ConfigParser()
 cfg.read('config.ini')
-
-CMD_TEMPLATE = 'curl -s --user {}:{} "http://{}.cloudant.com/{}/'.format(
-    cfg.get('adv', 'user'),
-    cfg.get('adv', 'passwd'),
-    cfg.get('adv', 'server'),
-    cfg.get('adv', 'dbname')
+cfg.setdefault(
+    'adv', {
+        'user': 'foo',
+        'passwd': 'foo',
+        'server': 'foo',
+        'dbname': 'foo'
+    }
 )
+
+
+def get_template():
+    return 'curl -s --user {}:{} "http://{}.cloudant.com/{}/'.format(
+        cfg.get('adv', 'user'),
+        cfg.get('adv', 'passwd'),
+        cfg.get('adv', 'server'),
+        cfg.get('adv', 'dbname')
+    )
 
 
 def get_logger():
@@ -53,7 +63,7 @@ def run_query(query):
     """
     Run a query on the database
     """
-    cmd = CMD_TEMPLATE + '_design/gamesearch/_search/searchAll?q={}&include_docs=true&limit=200{}"'
+    cmd = get_template() + '_design/gamesearch/_search/searchAll?q={}&include_docs=true&limit=200{}"'
     out = execute(cmd.format(query, ''))
     if out is None:
         return None
@@ -79,7 +89,7 @@ def get_game(gameid):
     """
     Retrieve a game from the database
     """
-    cmd = CMD_TEMPLATE + gameid + '"'
+    cmd = get_template() + gameid + '"'
     log.debug(cmd)
     out = execute(cmd)
     if out is None:
@@ -203,7 +213,7 @@ def upload_game(game=None):
         game['_id'] = gid
 
     cmd = (
-        CMD_TEMPLATE + '"' + " -X POST -H 'Content-Type: application/json' -d '{}'"
+        get_template() + '"' + " -X POST -H 'Content-Type: application/json' -d '{}'"
         .format(json.dumps(game, sort_keys=True))
     )
 
